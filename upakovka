@@ -1,0 +1,77 @@
+#include <cassert>
+#include <cstddef>
+#include <cstdint>
+#include <string>
+
+using namespace std;
+
+struct Nucleotide {
+    char symbol;
+    size_t position;
+    int chromosome_num;
+    int gene_num;
+    bool is_marked;
+    char service_info;
+};
+
+struct CompactNucleotide {
+    uint32_t position:28;
+    uint16_t gene_num:12;
+    char symbol:3;
+    char service_info:8;
+    uint8_t chromosome_num:6;
+    bool is_marked:1;
+    
+    // напишите вашу реализацию здесь
+};
+
+CompactNucleotide Compress(const Nucleotide& n) {
+    uint32_t position = n.position;
+    uint16_t gene_num = n.gene_num;
+    char symbol= n.symbol;
+    char serv_info= n.service_info;
+    uint8_t chromosome_num= n.chromosome_num;
+    bool is_marked= n.is_marked;
+    return {position, gene_num, symbol, serv_info, chromosome_num, is_marked};
+}
+
+Nucleotide Decompress(const CompactNucleotide& cn) {
+    char symbol = cn.symbol;
+    size_t position = cn.position;
+    int chromosome_num = cn.chromosome_num;
+    int gene_num = cn.gene_num;
+    bool is_marked = cn.is_marked;
+    char service_info = cn.service_info;
+    return {symbol, position, chromosome_num, gene_num, is_marked, service_info};
+}
+
+static_assert(sizeof(CompactNucleotide) <= 8, "Your CompactNucleotide is not compact enough"s);
+static_assert(alignof(CompactNucleotide) == 4, "Don't use '#pragma pack'!"s);
+bool operator==(const Nucleotide& lhs, const Nucleotide& rhs) {
+    return (lhs.symbol == rhs.symbol) && (lhs.position == rhs.position) && (lhs.chromosome_num == rhs.chromosome_num)
+        && (lhs.gene_num == rhs.gene_num) && (lhs.is_marked == rhs.is_marked) && (lhs.service_info == rhs.service_info);
+}
+void TestSize() {
+    assert(sizeof(CompactNucleotide) <= 8);
+}
+void TestCompressDecompress() {
+    Nucleotide source;
+    source.symbol = 'T';
+    source.position = 1'000'000'000;
+    source.chromosome_num = 48;
+    source.gene_num = 1'000;
+    source.is_marked = true;
+    source.service_info = '!';
+
+    CompactNucleotide compressedSource = Compress(source);
+    Nucleotide decompressedSource = Decompress(compressedSource);
+
+    assert(source == decompressedSource);
+}
+
+int main() {
+    TestSize();
+    TestCompressDecompress();
+   
+    
+}
